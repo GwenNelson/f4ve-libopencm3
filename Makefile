@@ -1,7 +1,8 @@
 PROJECTS =\
 	  blinky\
 	  serial-echo\
-	  spi-flash-check
+	  spi-flash-check\
+	  nrf24l01-beacon
 
 all: libopencm3 $(PROJECTS)
 
