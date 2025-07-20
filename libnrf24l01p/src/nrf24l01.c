@@ -19,6 +19,8 @@
 
 #include "nrf24l01.h"
 
+#include <libopencm3/stm32/gpio.h>
+
 /*
  * NRF2401 Commands
  */
@@ -107,6 +109,17 @@ int nrf_send(nrf_payload *payload)
      return i;
 }
 
+#define SYSCLK_MHZ      168UL
+#define LOOP_CYCLES     5UL
+
+static inline void delay_us(uint32_t us) {
+    // Calculate iteration count
+    volatile uint32_t count = (SYSCLK_MHZ * us) / LOOP_CYCLES;
+    while (count--) {
+        __asm__ volatile ("nop");
+    }
+}
+
 int nrf_send_blocking(nrf_payload *payload)
 {
      int i;
@@ -132,6 +145,10 @@ int nrf_send_blocking(nrf_payload *payload)
      }
      nrf_spi_csh();
 
+     gpio_set(GPIOB,GPIO6);
+     delay_us(20);
+     gpio_clear(GPIOB,GPIO6); 
+
      // wait until payload passed TX FIFO
      do {
           nrf_read_reg(NRF_REG_STATUS, &status);
@@ -148,6 +165,8 @@ int nrf_send_blocking(nrf_payload *payload)
 
      // clear TX_DS/MAX_RT bits (by writing 1 or just writing back the status)
      nrf_write_reg(NRF_REG_STATUS, &status);
+
+    
 
      return i;
 }
